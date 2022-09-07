@@ -1,22 +1,30 @@
-import pygame 
+import pygame
+
+from physics import gravitation
 
 
 class Player(pygame.sprite.Sprite): 
 
     def __init__(self , pos) -> None:
         super().__init__() 
-        self.sprites = {}   
+           
         self.v0 = 1
         self.speed = pygame.math.Vector2(self.v0 , self.v0) 
-
         self.direction = pygame.math.Vector2(0,0)     
+        self.dir_changed = False  
 
-        self.dir_changed = False 
+        self.mass = 1 
+        self.neg_mass = self.mass * -1
 
+
+
+        self.sprites = {}
         # Animation Speeds
         self.animation_speed = {} 
         self.animation_speed["run"] = 0.02 
-        self.animation_speed["idle"] = 0.02
+        self.animation_speed["idle"] = 0.02 
+        self.animation_speed["jump"] = 0.001
+
 
 
         # loading animations
@@ -29,7 +37,11 @@ class Player(pygame.sprite.Sprite):
         self.sprites["run"] = []  
         [self.sprites["run"].append(
             "assets/Treasure Hunters/Captain Clown Nose/Sprites/Captain Clown Nose/Captain Clown Nose without Sword/02-Run/Run 0"+str(i+1)+".png") 
-            for i in range(6)] 
+            for i in range(6)]  
+
+        self.sprites["jump"] = [] 
+        [self.sprites["jump"].append("assets/Treasure Hunters/Captain Clown Nose/Sprites/Captain Clown Nose/Captain Clown Nose without Sword/03-Jump/Jump 0"+str(i+1)+".png")
+        for i in range(3) ] 
         
 
         self.status = "idle"   
@@ -54,6 +66,28 @@ class Player(pygame.sprite.Sprite):
 
 
 
+    def jump(self): 
+        if self.status == "jump": 
+            self.direction.y = -1 
+            try:
+                F_net = 0.5 * self.mass * (self.speed.y ** 2)   
+            finally: 
+                print(self.speed)
+
+            self.speed -= pygame.math.Vector2(0 , F_net) 
+            
+            if self.speed.y < 0 :  
+                self.direction.y = -1 
+            
+            if self.speed.y <= (-self.v0 -1): 
+                self.status = "idle" 
+                self.speed.y = self.v0   
+                self.direction.y = 1
+
+
+
+
+
     def get_input(self): 
 
             keys = pygame.key.get_pressed() 
@@ -74,10 +108,25 @@ class Player(pygame.sprite.Sprite):
             else : 
                 self.direction.x = 0   
                 self.status = "idle" 
-                self.animate()
+                self.animate() 
+
+            if keys[pygame.K_w]:
+                
+                if self.status != "jump":
+                    self.status = "jump"  
+                self.animate() 
+
 
 
     def update(self): 
+        
+
+
+        if self.status != "jump": 
+            gravitation(self) 
+        
+        
+        
         self.get_input()   
         self.direction.x *= self.speed.x
         self.direction.y *= self.speed.y 
