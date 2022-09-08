@@ -29,7 +29,7 @@ while running:
             if e.key == pygame.K_ESCAPE: 
                 pygame.event.post(pygame.event.Event(pygame.QUIT))  
 
-    screen.fill((51,102,204))  
+    screen.fill((0,0,0))  #(51,102,204)
     level1.run()
     pygame.display.update()  
     clock.tick(60)
