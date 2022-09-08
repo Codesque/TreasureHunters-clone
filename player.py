@@ -1,4 +1,6 @@
-import pygame 
+import pygame
+
+from settings import debug 
 
 
 class Player(pygame.sprite.Sprite): 
@@ -6,16 +8,19 @@ class Player(pygame.sprite.Sprite):
     def __init__(self , pos) -> None:
         super().__init__() 
         self.sprites = {}   
-        self.v0 = 1
+        self.v0 = 5
         self.speed = pygame.math.Vector2(self.v0 , self.v0) 
+        self.direction = pygame.math.Vector2(0,0)      
 
-        self.direction = pygame.math.Vector2(0,0)     
+        self.mass = 1 
+        self.gravity = self.mass * 0.4 
+        self.jump_speed = -2
 
         self.dir_changed = False 
 
         # Animation Speeds
         self.animation_speed = {} 
-        self.animation_speed["run"] = 0.02 
+        self.animation_speed["run"] = 0.3 
         self.animation_speed["idle"] = 0.02
 
 
@@ -52,11 +57,19 @@ class Player(pygame.sprite.Sprite):
             self.image = pygame.transform.flip(self.image , True , False)
             
 
+    def apply_gravity(self): 
+        self.direction.y += self.gravity 
+        self.rect.y += self.direction.y 
+
 
 
     def get_input(self): 
 
-            keys = pygame.key.get_pressed() 
+            keys = pygame.key.get_pressed()  
+
+            if keys[pygame.K_w]: 
+                self.status = "jump"
+                self.jump()
 
             if keys[pygame.K_d]: 
                 self.direction.x = 1   
@@ -74,14 +87,22 @@ class Player(pygame.sprite.Sprite):
             else : 
                 self.direction.x = 0   
                 self.status = "idle" 
-                self.animate()
+                self.animate() 
+
+
+
+
+
+    def jump(self): 
+ 
+        self.direction.y += self.jump_speed 
 
 
     def update(self): 
-        self.get_input()   
-        self.direction.x *= self.speed.x
-        self.direction.y *= self.speed.y 
-        self.rect.center += self.direction 
+        self.get_input()    
+        debug(self.speed)
+         
+        
 
 
 

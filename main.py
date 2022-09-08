@@ -12,7 +12,7 @@ previous_time = time.time()
 running = True  
 
 level1 = Level(level_map , screen)
-
+clock = pygame.time.Clock()
 while running: 
 
     delta_time = time.time() - previous_time 
@@ -31,7 +31,8 @@ while running:
 
     screen.fill((51,102,204))  
     level1.run()
-    pygame.display.update() 
+    pygame.display.update()  
+    clock.tick(60)
 
 
      

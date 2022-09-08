@@ -36,31 +36,76 @@ class Level :
         direction_x = player.direction.x 
         
         if player_x < CAMERA_BORDERS["left"] and direction_x < 0: 
-            self.world_shift_vector.x = 2
+            self.world_shift_vector.x = player.v0 
             player.speed.x = 0  
 
         elif player_x > SCREEN_WIDTH- CAMERA_BORDERS["right"] and direction_x > 0: 
-            self.world_shift_vector.x = -2 
+            self.world_shift_vector.x = -player.v0
             player.speed.x = 0  
 
         else : 
             self.world_shift_vector.x = 0 
-            player.speed.x = 1  
+            player.speed.x = player.v0 
 
 
 
-         
+
+    def horizontal_movement_collusion(self): 
+        player = self.gamers.sprite 
+
+        player.rect.centerx += player.speed.x * player.direction.x  
+
+        for sprite in self.tiles.sprites(): 
+
+            if sprite.rect.colliderect(player.rect): 
+                if player.direction.x < 0 : # player is moving to left 
+                    player.rect.left = sprite.rect.right 
+
+                elif player.direction.x > 0 : # player is moving to right 
+                    player.rect.right = sprite.rect.left 
+
+
+
+    def verticle_movement_collusion(self): 
+        player = self.gamers.sprite  
+
+        player.apply_gravity()
+        for sprite in self.tiles.sprites(): 
+            if sprite.rect.colliderect(player.rect): 
+                if player.direction.y > 0 : # player is moving to bottom
+                    player.rect.bottom = sprite.rect.top  
+                    player.direction.y = 0 # to overcome increment of gravity
+                
+                
+                
+                elif player.direction.y < 0 : # player is moving to top 
+                        player.rect.top = sprite.rect.bottom 
+                        player.direction.y = 0 # to overcome the problem of hanging on the air
+
+
+
+
+        
+
+
 
 
 
 
     def run(self): 
-        self.tiles.update(self.world_shift_vector) # map shifts 
-        self.tiles.draw(self.display_surface)  
 
+        # tiles 
+        self.tiles.update(self.world_shift_vector) # map shifts 
+        self.tiles.draw(self.display_surface) 
+        self.scroll_x()  
+
+        # player  
+        self.gamers.update() 
+        self.horizontal_movement_collusion() 
+        self.verticle_movement_collusion() 
         self.gamers.draw(self.display_surface) 
-        self.gamers.update()  
-        self.scroll_x()
+          
+        
 
 
 
