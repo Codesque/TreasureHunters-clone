@@ -14,7 +14,7 @@ level_map = [
 "XXXXXXXXXX..XXXX..XXXX..XX...."
 ] 
 
-TILE_SIZE = 80 
+TILE_SIZE = 64 
 SCREEN_WIDTH = 1200 
 SCREEN_HEIGHT = len(level_map) * TILE_SIZE # 704   
 COLLUSION_TOLERANCE = 3

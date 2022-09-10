@@ -2,7 +2,9 @@ import pygame
 from player import Player 
 from tile import Tile 
 from settings import *  
-from particles import ParticleEffect
+from particles import ParticleEffect 
+import pytmx 
+from pytmx import load_pygame
 
 
 
@@ -11,12 +13,15 @@ class Level :
     def __init__(self , level_data , surface) -> None: 
         self.display_surface = surface 
         self.level_data = level_data  
-        self.setup_level(level_data) 
+        #self.setup_level(level_data)  
+        self.setup_tiles()
         self.world_shift_vector = pygame.math.Vector2(0,0) 
         self.current_x = 0 
 
         self.dusts = pygame.sprite.GroupSingle() 
-        self.player_on_the_ground = False 
+        self.player_on_the_ground = False  
+
+        self.once = True 
 
 
     def create_jump_dust_particle(self , pos):  
@@ -45,7 +50,44 @@ class Level :
 
                 if col == "P": 
                     self.player = Player(pos , self.display_surface , self.create_jump_dust_particle)  
-                    self.gamers.add(self.player) 
+                    self.gamers.add(self.player)  
+
+    def setup_tiles(self , path = "../Tiled/levels/treasure_hunters1.tmx"): 
+        self.tiles = pygame.sprite.Group() 
+        #self.gamers = pygame.sprite.GroupSingle()  
+        self.tmx_data = load_pygame(path)   
+        
+        """
+        if self.once : 
+            for layer in self.tmx_data.visible_layers : 
+                print(layer.name) 
+            self.once = False  
+        """ 
+        self.gamers = pygame.sprite.GroupSingle() 
+
+        for layer in self.tmx_data.visible_layers : 
+
+            if layer.name == "terrain" : 
+                for x , y , surface in layer.tiles(): 
+                    pos = (x * TILE_SIZE , y * TILE_SIZE)
+                    new_terrain = Tile(pos ,surface) 
+                    self.tiles.add(new_terrain)  
+
+        
+        object_layer = self.tmx_data.get_layer_by_name('spawn_point')  
+        for obj in object_layer : 
+            pos = (obj.x , obj.y) 
+            new_player = Player(pos , self.display_surface , self.create_jump_dust_particle)  
+            self.gamers.add(new_player)
+
+
+
+            
+
+
+            
+
+        
 
                     
     def scroll_x(self): 
@@ -156,6 +198,7 @@ class Level :
 
     def run(self): 
 
+        #self.setup_tiles()
 
         # tiles 
         self.tiles.update(self.world_shift_vector) # map shifts 
@@ -174,6 +217,7 @@ class Level :
         self.create_landing_particles() # if the old on_ground and new on_ground values are different and there is no jumping dust execute
         self.gamers.draw(self.display_surface) 
           
+
         
 
 

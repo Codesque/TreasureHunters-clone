@@ -2,10 +2,10 @@ import pygame
 
 class Tile(pygame.sprite.Sprite): 
 
-    def __init__(self, pos , size) -> None:
+    def __init__(self, pos ,surface : pygame.Surface) -> None:
         super().__init__() 
-        self.image = pygame.Surface((size,size)) 
-        self.image.fill((204,102,90)) 
+        self.image = surface 
+        #self.image.fill((204,102,90)) 
         self.rect = self.image.get_rect(topleft = pos)  
         self.tile_shift_vector = pygame.math.Vector2(0,0) 
 

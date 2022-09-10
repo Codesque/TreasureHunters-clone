@@ -207,7 +207,7 @@ class Player(pygame.sprite.Sprite):
 
             # the commented ones used for old_animate() method 
             
-            if keys[pygame.K_w] and self.on_ground : 
+            if keys[pygame.K_w]: #and self.on_ground : 
                 #self.status = "jump" 
                 self.create_dust_particles(self.rect.midbottom)
                 self.jump() 
