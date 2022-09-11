@@ -50,7 +50,11 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = False 
         self.on_ceiling = False 
         self.on_left = False 
-        self.on_right = False  
+        self.on_right = False   
+
+        # score holder 
+        self.scores = { "gold_coins" :0 , "silver_coins":0 , "enemies" : 0 } 
+        
 
         
 
