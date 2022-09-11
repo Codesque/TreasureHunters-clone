@@ -1,5 +1,6 @@
 import pygame  
-from support import import_files
+from support import import_files 
+import random 
 
 pygame.init() 
 
@@ -37,6 +38,35 @@ class ParticleEffect(pygame.sprite.Sprite):
         self.animate()
         self.rect.x += xshift.x 
         
+
+class ExplosionEffect(pygame.sprite.Sprite): 
+    def __init__(self , pos) -> None:
+        super().__init__()  
+        self.import_animation()  
+        self.image = self.animations[0] 
+        self.rect = self.image.get_rect(center = pos) 
+
+
+        self.frame_counter = 0 
+        self.animation_speed = random.randint(3,5) / 20 
+
+
+        
+    def import_animation(self , path = "../Tiled/graphics/treasure_hunters/level_1/enemy/explosion"): 
+        self.animations = import_files(path)  
+
+    def animate(self) : 
+        self.frame_counter += self.animation_speed 
+        if self.frame_counter >= len(self.animations): 
+            self.kill() 
+        else : 
+            self.image = self.animations[int(self.frame_counter)] 
+
+
+    def update(self , xshift : pygame.math.Vector2) -> None:
+        self.animate() 
+        self.rect.x += xshift.x 
+
 
         
 
