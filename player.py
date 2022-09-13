@@ -252,11 +252,14 @@ class Player(pygame.sprite.Sprite):
     def update(self): 
 
         self.get_input()   
-        debug(f"status : {self.status}  //  ground:{self.on_ground} ,ceiling: {self.on_ceiling} , on_Left: {self.on_left} ,on_right {self.on_right} ")
         self.get_status()
         self.animate()  
         self.run_dust_animation() 
+
+        #debugging_tools
         #pygame.draw.rect(self.display_surface , 'red' ,self.rect , 5)  
+        #debug(f"status : {self.status}  //  ground:{self.on_ground} ,ceiling: {self.on_ceiling} , on_Left: {self.on_left} ,on_right {self.on_right} ")
+ 
          
         
 

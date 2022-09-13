@@ -34,7 +34,7 @@ class Node(pygame.sprite.Sprite):
             self.animate()   
         elif self.status == "locked": 
             tint_img = self.image.copy() 
-            tint_img.fill('black' ,None , pygame.BLEND_RGBA_MULT) 
+            tint_img.fill((102,102,102) ,None , pygame.BLEND_RGB_MIN) 
             self.image.blit(tint_img , (0,0))
 
 

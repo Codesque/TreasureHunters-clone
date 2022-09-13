@@ -10,12 +10,19 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))    
 
 from level import Level 
-from overworld import Overworld
+from overworld import Overworld 
+from gui import UI
 
 class Game : 
 
     def __init__(self) -> None: 
-        self.max_level = 1
+        
+        # UI 
+        self.max_health = 100 
+        self.current_health = 100 
+        self.ui = UI(screen)
+        # Overworld Creation 
+        self.max_level = 3
         self.overworld = Overworld(1 , self.max_level , screen , self.create_level)  
         self.status = "overworld"   
         self.display_surface = pygame.display.get_surface()
@@ -34,7 +41,9 @@ class Game :
         if self.status == "overworld":
             self.overworld.run() 
         else : 
-            self.level.run() 
+            self.level.run()  
+            self.ui.show_health(self.current_health , self.max_health) 
+            self.ui.show_coins(0)
 
 
 previous_time = time.time()
