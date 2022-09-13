@@ -2,26 +2,45 @@
 import pygame 
 import time   
 from settings import *  
-from level import Level 
-from overworld import Overworld
+ 
+
 
 
 pygame.init() 
-screen = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))   
+screen = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))    
+
+from level import Level 
+from overworld import Overworld
 
 class Game : 
 
     def __init__(self) -> None: 
-        self.max_level = 3
-        self.overworld = Overworld(1 , self.max_level , screen)  
+        self.max_level = 1
+        self.overworld = Overworld(1 , self.max_level , screen , self.create_level)  
+        self.status = "overworld"   
+        self.display_surface = pygame.display.get_surface()
 
-    def run(self): 
-        self.overworld.run()
+    def create_level(self , current_level): 
+        self.level = Level(screen , current_level , self.create_overworld)  
+        self.status = "level" 
+
+    def create_overworld(self , current_level , new_max_level ): 
+        self.status = "overworld"  
+        if new_max_level > self.max_level : 
+            self.max_level = new_max_level
+        self.overworld = Overworld(current_level , self.max_level , screen , self.create_level )
+
+    def run(self):  
+        if self.status == "overworld":
+            self.overworld.run() 
+        else : 
+            self.level.run() 
+
 
 previous_time = time.time()
 running = True  
 
-level1 = Level(level_map , screen)
+level1 = Level(screen , 1 , Game.create_overworld)
 clock = pygame.time.Clock() 
 game = Game()
 while running: 

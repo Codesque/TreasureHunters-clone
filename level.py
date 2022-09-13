@@ -1,5 +1,6 @@
 import pygame 
-import pytmx 
+import pytmx  
+from game_data import levels
 
 from player import Player
 
@@ -15,12 +16,17 @@ from decorations import Sky , Water , Clouds
 
 class Level :  
 
-    def __init__(self , level_data , surface : pygame.Surface) -> None: 
+    def __init__(self  , surface : pygame.Surface ,current_level : int , create_overworld : object ) -> None: 
+        
+        self.create_overworld = create_overworld 
+        self.level_path = levels[current_level]["path"]  
+        self.current_level = current_level  
+        self.unlock_level = levels[current_level]["overworld"]["unlock"]
+        
         self.display_surface = surface  
-        self.w ,self.h = self.display_surface.get_width() , self.display_surface.get_height()
-        self.level_data = level_data  
+        self.w ,self.h = self.display_surface.get_width() , self.display_surface.get_height()  
         #self.setup_level(level_data)  
-        self.setup_tiles() 
+        self.setup_tiles(self.level_path) 
         
         self.world_shift_vector = pygame.math.Vector2(0,0) 
         self.current_x = 0 
@@ -121,7 +127,14 @@ class Level :
             
             pos = (obj.x , obj.y) 
             new_player = Player(pos , self.display_surface , self.create_jump_dust_particle)  
-            self.gamers.add(new_player)  
+            self.gamers.add(new_player)   
+
+        checkpoint_layer = self.tmx_data.get_layer_by_name('ending_point') 
+        for obj in checkpoint_layer: 
+            pos = (obj.x , obj.y)  
+            hat_img = pygame.image.load("../Tiled/graphics/treasure_hunters/level_1/character/hat.png") 
+            self.goal = Tile(pos , hat_img) 
+            self.background_tiles.add(self.goal)  
 
         # BackGround Palms
         bg_palms_layer = self.tmx_data.get_layer_by_name('bg_palms') 
@@ -313,12 +326,30 @@ class Level :
         if player.on_ceiling and player.direction.y > 0.1 : 
             player.on_ceiling = False 
 
-        
+    def input(self): 
+
+        keys = pygame.key.get_pressed() 
+
+        if keys[pygame.K_o]: 
+            self.create_overworld(self.current_level ,self.unlock_level) #unlocks the next level 
+            # if you change the self.unlock part to 0 , no level will be unlocked 
+
+    def check_death(self): 
+        if self.gamers.sprite.rect.top > SCREEN_HEIGHT : 
+            self.create_overworld(self.current_level , 0) 
+
+    def check_win(self): 
+        if self.gamers.sprite.rect.colliderect(self.goal.rect): 
+            self.create_overworld(self.current_level , self.unlock_level)
+
         
     def run(self): 
 
         #self.setup_tiles() 
 
+        self.input() 
+        self.check_win()
+        self.check_death() 
         #decorations
         self.sky.draw(self.display_surface)  
         self.clouds.draw(self.display_surface , self.world_shift_vector)
