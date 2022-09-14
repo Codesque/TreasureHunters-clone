@@ -16,9 +16,12 @@ from decorations import Sky , Water , Clouds
 
 class Level :  
 
-    def __init__(self  , surface : pygame.Surface ,current_level : int , create_overworld : object ) -> None: 
+    def __init__(self  , surface : pygame.Surface ,current_level : int , create_overworld : object  , change_coin_amount : object , change_health : object) -> None: 
         
-        self.create_overworld = create_overworld 
+        self.create_overworld = create_overworld  
+        self.change_coin_amount = change_coin_amount 
+        self.change_health = change_health
+
         self.level_path = levels[current_level]["path"]  
         self.current_level = current_level  
         self.unlock_level = levels[current_level]["overworld"]["unlock"]
@@ -126,7 +129,7 @@ class Level :
         for obj in spawn_layer : 
             
             pos = (obj.x , obj.y) 
-            new_player = Player(pos , self.display_surface , self.create_jump_dust_particle)  
+            new_player = Player(pos , self.display_surface , self.create_jump_dust_particle , self.change_health)  
             self.gamers.add(new_player)   
 
         checkpoint_layer = self.tmx_data.get_layer_by_name('ending_point') 
@@ -164,7 +167,14 @@ class Level :
         for x , y , surface in gold_coins_layer.tiles(): 
             pos = (x * TILE_SIZE , y * TILE_SIZE) 
             new_gold_coin = Coins(pos , "gold") 
-            self.coins.add(new_gold_coin) 
+            self.coins.add(new_gold_coin)  
+
+        silver_coins_layer = self.tmx_data.get_layer_by_name("silver_coins")  
+        for x , y , surface in silver_coins_layer.tiles(): 
+            pos = (x * TILE_SIZE , y * TILE_SIZE) 
+            new_silver_coin = Coins(pos , "silver") 
+            self.coins.add(new_silver_coin)  
+
 
         enemy_layer = self.tmx_data.get_layer_by_name("enemies") 
         for x , y , surface in enemy_layer.tiles(): 
@@ -177,31 +187,14 @@ class Level :
             pos = (x * TILE_SIZE , y * TILE_SIZE)  
             new_constraint =   Constraints(surface , pos)  
             self.constraints.add(new_constraint)
-
-
-        
-
-
-            
-
-                
-
-
-
-
-        
-
-
-
             
     def coinCollusion(self): 
         player = self.gamers.sprite 
-        coins = self.coins.sprites() 
-        for coin in coins : 
-            if player.rect.colliderect(coin.rect): 
-                coin_type = coin.type+"_coins"
-                player.scores[coin_type]+=1
-                coin.kill()   
+        collided_coins = pygame.sprite.spritecollide(player , self.coins , True)  
+        if collided_coins: 
+            for coin in collided_coins : 
+                if coin.type == "gold" : self.change_coin_amount(5) 
+                elif coin.type == "silver" : self.change_coin_amount(1)
 
     def zombieCollusion(self): 
 
@@ -209,15 +202,7 @@ class Level :
 
             if pygame.sprite.spritecollide(zombie , self.constraints , False): 
                 zombie.turn_from_corner() 
-
-                
-                
-
-            
-
-        
-
-                    
+                  
     def scroll_x(self): 
         player = self.gamers.sprite 
         player_x = player.rect.centerx 
@@ -234,9 +219,6 @@ class Level :
         else : 
             self.world_shift_vector.x = 0 
             player.speed.x = player.v0 
-
-
-
 
     def horizontal_movement_collusion(self): 
         player = self.gamers.sprite 
@@ -262,14 +244,12 @@ class Level :
         if player.on_right and  (player.direction.x <= 0 or self.current_x < player.rect.right) : 
             player.on_right = False 
                     
-
     def get_player_on_ground(self): # before verticle collusions , if the player is not on the ground , check the second statement
         player = self.gamers.sprite 
         if player.on_ground : 
             self.player_on_the_ground = True 
         else : 
             self.player_on_the_ground = False  
-
 
     def create_landing_particles(self): 
         player = self.gamers.sprite  
@@ -292,12 +272,17 @@ class Level :
                 if abs(player.rect.bottom - zombie.rect.top) <= COLLUSION_TOLERANCE and (player.status == "fall"):  
                     zombie_pos = zombie.rect.center
                     zombie.kill()  
-                    explosion = ExplosionEffect(zombie_pos) 
-                    self.explosions.add(explosion)
-        
+                    explosion = ExplosionEffect(zombie_pos)  
+                    player.direction.y = -15
+                    self.explosions.add(explosion)  
 
-        
+                else : 
+                    player.get_damage()
 
+                
+                        
+                    
+        
     def verticle_movement_collusion(self): 
         player = self.gamers.sprite  
 
@@ -336,7 +321,9 @@ class Level :
 
     def check_death(self): 
         if self.gamers.sprite.rect.top > SCREEN_HEIGHT : 
-            self.create_overworld(self.current_level , 0) 
+            #self.create_overworld(self.current_level , 0)   
+            self.change_health(-999)
+
 
     def check_win(self): 
         if self.gamers.sprite.rect.colliderect(self.goal.rect): 

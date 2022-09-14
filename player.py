@@ -3,12 +3,13 @@ import os
 import pygame
 
 from settings import TILE_SIZE, debug  
-from support import import_files
+from support import import_files 
+import math 
 
 
 class Player(pygame.sprite.Sprite): 
 
-    def __init__(self , pos , surface : pygame.Surface , create_particle) -> None:
+    def __init__(self , pos , surface : pygame.Surface , create_particle: object , change_health : object) -> None:
         super().__init__()  
 
         # For animations 
@@ -43,7 +44,8 @@ class Player(pygame.sprite.Sprite):
         #self.old_import_animations(pos) 
 
         #player status : 
-        self.status = "idle"  
+        self.status = "idle"   
+        
         self.hasJump = 3
         self.face_right = True  
             # to configure animations based on the effect of collusions to our animations 
@@ -52,9 +54,11 @@ class Player(pygame.sprite.Sprite):
         self.on_left = False 
         self.on_right = False   
 
-        # score holder 
-        self.scores = { "gold_coins" :0 , "silver_coins":0 , "enemies" : 0 } 
-        
+        # health management system 
+        self.change_health = change_health 
+        self.invincible = False  
+        self.invincibility_duration = 2000
+        self.hurt_time = 0 
 
         
 
@@ -144,10 +148,16 @@ class Player(pygame.sprite.Sprite):
         if self.face_right : 
             self.image = image 
         else : 
-            self.image = pygame.transform.flip(image , True , False) 
+            self.image = pygame.transform.flip(image , True , False)  
 
+        alpha = self.wave_func() 
+        if self.invincible: 
+            self.image.set_alpha(alpha) 
+        else : 
+            self.image.set_alpha(255)
 
-
+       
+       
         # Configure the origin of the image for properly working animations.
 		
         if self.on_ground and self.on_right:
@@ -241,7 +251,25 @@ class Player(pygame.sprite.Sprite):
                 #self.old_animate() 
 
 
+    def get_damage(self): 
+        
+        if not self.invincible :
+            self.change_health(-10) 
+            self.invincible = True  
+            self.hurt_time = pygame.time.get_ticks() 
 
+    def invincibility_timer(self): 
+
+        if self.invincible:
+            current_time = pygame.time.get_ticks() 
+            if current_time - self.hurt_time >= self.invincibility_duration :  
+                self.invincible = False  
+
+
+    def wave_func(self): 
+        value = math.sin(pygame.time.get_ticks()) 
+        if value >= 0 : return 255 
+        else : return 0 
 
 
     def jump(self): 
@@ -254,7 +282,8 @@ class Player(pygame.sprite.Sprite):
         self.get_input()   
         self.get_status()
         self.animate()  
-        self.run_dust_animation() 
+        self.run_dust_animation()  
+        self.invincibility_timer() 
 
         #debugging_tools
         #pygame.draw.rect(self.display_surface , 'red' ,self.rect , 5)  

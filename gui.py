@@ -12,7 +12,7 @@ class UI :
         root_path = "../Tiled/graphics/treasure_hunters/ui/" 
 
         # health_bar 
-        self.health_bar = pygame.image.load(root_path+"health_bar.png")  
+        self.health_bar = pygame.image.load(root_path+"health_bar.png").convert_alpha()  
         self.startingOf_hbar = (54,39) 
         self.hbar_width , self.hbar_height = 152 , 4 
         
@@ -20,7 +20,7 @@ class UI :
 
         
         # coin 
-        self.coin = pygame.image.load(root_path+"coin.png") 
+        self.coin = pygame.image.load(root_path+"coin.png").convert_alpha() 
         self.coin_rect = self.coin.get_rect(topleft = (50,61)) # we use rects for coin because we want it's center to have the 
                                                         # same y axis with the center of the text surface   
         self.font = pygame.font.Font(root_path + "ARCADEPI.TTF" , 20)    
