@@ -21,7 +21,7 @@
 <div align = "right"  > 
 <div padding="20px"> 
         <br> 
-        <p> <i>Pirate is Stomping the Enemy</i> </p> 
+        <p> <i>Pirate is Stomping the Enemies</i> </p> 
         <img src="gameplay/pirate-stomp.gif" width="500px"> 
     
 </div>
