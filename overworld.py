@@ -70,7 +70,12 @@ class Overworld :
 
         # background 
         self.sky = Sky(8 , "overworld") 
-        self.clouds = Clouds(400 ,SCREEN_WIDTH ,20 , "overworld")
+        self.clouds = Clouds(400 ,SCREEN_WIDTH ,20 , "overworld") 
+
+        # To pretend pre-movement from the last level , we need to give cooldown to the user input 
+        self.start_timer = pygame.time.get_ticks() 
+        self.timer_length = 500
+        self.allow_input = False 
         
 
 
@@ -109,7 +114,7 @@ class Overworld :
     def input(self): 
         keys = pygame.key.get_pressed()
 
-        if not self.moving:
+        if not self.moving and self.allow_input:
             if keys[pygame.K_d] and self.current_level < self.max_level:
                 self.moving_direction = self.get_moving_direction("right")
                 self.current_level += 1   
@@ -122,7 +127,14 @@ class Overworld :
                 self.moving = True   
 
             elif keys[pygame.K_SPACE]:  
-                self.create_level( self.current_level) 
+                self.create_level( self.current_level)  
+
+    def allow_input_timer(self): 
+        if not self.allow_input : 
+            current_time = pygame.time.get_ticks() 
+            if current_time - self.start_timer >= self.timer_length : 
+                self.allow_input = True 
+
                 
 
 
@@ -146,6 +158,7 @@ class Overworld :
         
     def run(self):  
         
+        self.allow_input_timer()
         self.input() 
         self.icon.update()  
         self.update_icon_pos()

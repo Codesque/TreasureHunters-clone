@@ -1,5 +1,6 @@
 
-import pygame 
+import pygame  
+from pygame import mixer
 import time   
 from settings import *  
  
@@ -7,7 +8,12 @@ from settings import *
 
 
 pygame.init() 
-screen = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))    
+screen = pygame.display.set_mode((SCREEN_WIDTH , SCREEN_HEIGHT))     
+
+# Setting Caption And Icon : 
+pygame.display.set_caption("Treasure Hunters") 
+icon_img = pygame.image.load("../Tiled/graphics/treasure_hunters/icon.png") 
+pygame.display.set_icon(icon_img)
 
 from level import Level 
 from overworld import Overworld 
@@ -23,17 +29,32 @@ class Game :
         self.coins = 0
         self.ui = UI(screen)
         # Overworld Creation 
-        self.max_level = 3
+        self.max_level = 5
         self.overworld = Overworld(1 , self.max_level , screen , self.create_level)  
         self.status = "overworld"   
-        self.display_surface = pygame.display.get_surface()
+        self.display_surface = pygame.display.get_surface()  
 
-    def create_level(self , current_level): 
-        self.level = Level(screen , current_level , self.create_overworld , self.change_coin_amount , self.change_health)  
+        self.import_music() 
+        self.overworld_music.play(-1)  
+
+
+    def import_music(self): 
+        music_path = "../Tiled/graphics/treasure_hunters/audio/" 
+        effect_path = music_path + "effects/"  
+        self.level_music = mixer.Sound(music_path + "level_music.wav")
+        self.overworld_music = mixer.Sound(music_path + "overworld_music.wav")
+
+    def create_level(self , current_level):  
+        self.overworld_music.stop() 
+        
+        self.level = Level(screen , current_level , self.create_overworld , self.change_coin_amount , self.change_health)   
+        self.level_music.play(-1)
         self.status = "level" 
 
     def create_overworld(self , current_level , new_max_level ): 
-        self.status = "overworld"  
+        self.status = "overworld"   
+        self.level_music.stop() 
+        self.overworld_music.play(-1)
         if new_max_level > self.max_level : 
             self.max_level = new_max_level
         self.overworld = Overworld(current_level , self.max_level , screen , self.create_level ) 
@@ -50,7 +71,8 @@ class Game :
             self.create_overworld(1 , 0) 
             self.current_health = 100  
             self.max_health = 100
-            self.coins = 0 
+            self.coins = 0  
+            self.level_music.stop() 
 
 
     def run(self):  

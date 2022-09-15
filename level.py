@@ -1,5 +1,7 @@
 import pygame 
-import pytmx  
+import pytmx   
+
+from pygame import mixer
 from game_data import levels
 
 from player import Player
@@ -18,6 +20,8 @@ class Level :
 
     def __init__(self  , surface : pygame.Surface ,current_level : int , create_overworld : object  , change_coin_amount : object , change_health : object) -> None: 
         
+
+        self.import_level_sounds()
         self.create_overworld = create_overworld  
         self.change_coin_amount = change_coin_amount 
         self.change_health = change_health
@@ -43,7 +47,15 @@ class Level :
         self.clouds = Clouds(400 , LEVEL_WIDTH ,30)
 
 
+    def import_level_sounds(self):  
+        music_path = "../Tiled/graphics/treasure_hunters/audio/" 
+        effect_path = music_path + "effects/" 
+        self.coin_sound = mixer.Sound(effect_path + "coin.wav")  
+        self.stomp_sound = mixer.Sound(effect_path + "stomp.wav") 
 
+        
+
+        
 
     def create_jump_dust_particle(self , pos):  
 
@@ -191,7 +203,8 @@ class Level :
     def coinCollusion(self): 
         player = self.gamers.sprite 
         collided_coins = pygame.sprite.spritecollide(player , self.coins , True)  
-        if collided_coins: 
+        if collided_coins:  
+            self.coin_sound.play()
             for coin in collided_coins : 
                 if coin.type == "gold" : self.change_coin_amount(5) 
                 elif coin.type == "silver" : self.change_coin_amount(1)
@@ -244,6 +257,39 @@ class Level :
         if player.on_right and  (player.direction.x <= 0 or self.current_x < player.rect.right) : 
             player.on_right = False 
                     
+    def horizontal_movement_collusion_with_collusion_rect(self):  
+        # we are gonna use player.collusion_rect instead of player.rect 
+        player = self.gamers.sprite 
+
+        player.collusion_rect.centerx += player.direction.x * player.speed.x  
+
+        for sprite in self.tiles.sprites(): 
+
+            if sprite.rect.colliderect(player.collusion_rect): 
+                if player.direction.x < 0 : # player is moving to left 
+                    player.collusion_rect.left = sprite.rect.right 
+                    player.on_left = True 
+
+                    # We dont need current_x anymore because collusion_rect is static kind of rect :
+                        #self.current_x = player.rect.left 
+
+                elif player.direction.x > 0 : # player is moving to right 
+                    player.collusion_rect.right = sprite.rect.left 
+                    player.on_right = True  
+
+                    # We dont need current_x anymore because collusion_rect is static kind of rect :
+                        #self.current_x = player.rect.right 
+
+        # our rect is static , we dont need to update the origin point of the rect anymore : 
+        """
+        if player.on_left and (player.direction.x >= 0 or self.current_x > player.rect.left) : 
+            player.on_left = False 
+
+        if player.on_right and  (player.direction.x <= 0 or self.current_x < player.rect.right) : 
+            player.on_right = False  
+        """
+
+
     def get_player_on_ground(self): # before verticle collusions , if the player is not on the ground , check the second statement
         player = self.gamers.sprite 
         if player.on_ground : 
@@ -271,13 +317,15 @@ class Level :
             if player.rect.colliderect(zombie.rect):
                 if abs(player.rect.bottom - zombie.rect.top) <= COLLUSION_TOLERANCE and (player.status == "fall"):  
                     zombie_pos = zombie.rect.center
-                    zombie.kill()  
-                    explosion = ExplosionEffect(zombie_pos)  
+                    zombie.kill()   
+                    explosion = ExplosionEffect(zombie_pos)   
+                    self.stomp_sound.play()
                     player.direction.y = -15
                     self.explosions.add(explosion)  
 
                 else : 
-                    player.get_damage()
+                    player.get_damage() 
+                    
 
                 
                         
@@ -311,13 +359,44 @@ class Level :
         if player.on_ceiling and player.direction.y > 0.1 : 
             player.on_ceiling = False 
 
+    def verticle_movement_collusion_with_collusion_rect(self): 
+        
+        # instead of using player.rect we are gonna use collusion_rect : 
+        player = self.gamers.sprite  
+
+        player.apply_gravity()
+        for sprite in self.tiles.sprites(): 
+            if sprite.rect.colliderect(player.collusion_rect): 
+                if player.direction.y > 0 : # player is moving to bottom 
+                    player.collusion_rect.bottom = sprite.rect.top    
+                    player.direction.y = 0 # to overcome increment of gravity
+                    player.on_ground = True # to configure animations 
+                    
+                
+                
+                
+                elif player.direction.y < 0 : # player is moving to top 
+                        player.collusion_rect.top = sprite.rect.bottom  
+                        player.direction.y = 0 # to overcome the problem of hanging on the air 
+                        player.on_ceiling = True  # to configure animations   
+
+
+                # we still need on_ground because of jumping mechanic 
+            if player.on_ground and player.direction.y < 0  or player.direction.y > 1 : 
+                    player.on_ground = False  
+
+                # our collusion_rect is static , because of that we dont need to update the origin of the rect anymore 
+                
+            if player.on_ceiling and player.direction.y > 0.1 : 
+                    player.on_ceiling = False 
+                        
+                
+    
+
+
     def input(self): 
 
-        keys = pygame.key.get_pressed() 
-
-        if keys[pygame.K_o]: 
-            self.create_overworld(self.current_level ,self.unlock_level) #unlocks the next level 
-            # if you change the self.unlock part to 0 , no level will be unlocked 
+        keys = pygame.key.get_pressed()
 
     def check_death(self): 
         if self.gamers.sprite.rect.top > SCREEN_HEIGHT : 
@@ -332,6 +411,7 @@ class Level :
         
     def run(self): 
 
+        
         #self.setup_tiles() 
 
         self.input() 
@@ -345,6 +425,9 @@ class Level :
         #background_tiles which has no collusions 
         self.background_tiles.update(self.world_shift_vector) 
         self.background_tiles.draw(self.display_surface)
+        # dusts 
+        self.dusts.update(self.world_shift_vector) 
+        self.dusts.draw(self.display_surface)  
 
         # tiles - ones which has collusions  
         self.tiles.update(self.world_shift_vector) # map shifts 
@@ -358,17 +441,20 @@ class Level :
         self.coins.update(self.world_shift_vector) 
         self.coins.draw(self.display_surface)
 
-        # dusts 
-        self.dusts.update(self.world_shift_vector) 
-        self.dusts.draw(self.display_surface) 
 
 
         
         # player  
         self.gamers.update()  
-        self.horizontal_movement_collusion()  
+        
+        #self.horizontal_movement_collusion()  
+        self.horizontal_movement_collusion_with_collusion_rect() 
+
         self.get_player_on_ground() # is the player not on the ground before verticle collusions 
-        self.verticle_movement_collusion() # because of verticle collusions , direction.y = 0 and on_ground = True 
+        
+        #self.verticle_movement_collusion() # because of verticle collusions , direction.y = 0 and on_ground = True  
+        self.verticle_movement_collusion_with_collusion_rect()
+        
         self.create_landing_particles() # if the old on_ground and new on_ground values are different and there is no jumping dust execute
         self.gamers.draw(self.display_surface)
 
